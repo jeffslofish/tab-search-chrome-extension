@@ -1,12 +1,12 @@
 /*global chrome:true*/
 
+let activeUrls = [];
+
 const results = document.getElementById('results');
 const storageResults = document.getElementById('storageResults');
 const searchBox = document.getElementById('searchText');
 const form = document.getElementById('searchForm');
 const clearStorageButton = document.getElementById('clearStorage');
-
-let activeUrls = []; // { windowId: id, tabId: id, url: url }
 
 clearStorageButton.addEventListener("click", function () {
   chrome.storage.local.clear();
@@ -16,126 +16,11 @@ form.addEventListener("submit", processForm);
 form.addEventListener("submit", processFormForStorage);
 
 // eslint-disable-next-line no-unused-vars
-chrome.management.onEnabled.addListener(function (info) {
-  updateActiveUrls();
-  chrome.tabs.query({}, function (tabs) {
-    for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i].url.substr(0, 6) === 'chrome') {
-        continue;
-      }
-
-      let tab = tabs[i];
-      saveActiveTabContents(tab.id);
-    }
-  });
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  // sent from another content script, intended for saving source
+  activeUrls = request.activeUrls
 });
 
-chrome.tabs.onRemoved.addListener(function (tabId, removeInfo) {
-  let windowId = removeInfo.windowId;
-  removeActiveUrl(windowId, tabId);
-});
-
-function updateActiveUrls() {
-  activeUrls = [];
-
-  chrome.tabs.query({}, function (tabs) {
-    for (let i = 0; i < tabs.length; i++) {
-      chrome.tabs.get(tabs[i].id, function (tab) {
-        activeUrls.push({
-          windowId: tab.windowId,
-          tabId: tab.id,
-          url: tab.url
-        });
-      });
-    }
-  });
-}
-
-function removeActiveUrl(windowId, tabId) {
-  let index = activeUrls.findIndex(function (element) {
-    if (element.windowId === windowId && element.tabId === tabId) {
-      return true;
-    }
-    return false;
-  });
-
-  if (index > -1) {
-    activeUrls.splice(index, 1);
-  }
-}
-
-function saveActiveTabContents(tabId) {
-  chrome.tabs.get(tabId, function (tab) {
-    if (tab.url.substr(0, 6) === 'chrome') {
-      return;
-    }
-
-    chrome.tabs.executeScript(
-      tab.id,
-      { file: 'content_script.js' },
-      function () {
-        chrome.tabs.sendMessage(tab.id, {
-          msg: "getContents",
-          tabId: tab.id
-        }, function (response) {
-
-          if (response) {
-            let tabId = response.tabId;
-            chrome.tabs.get(tabId, function (tab) {
-              let content = response.tabContents;
-              let url = tab.url;
-              let tabTitle = tab.title;
-              let favIconUrl = tab.favIconUrl;
-
-              chrome.storage.local.get(['data'], function (result) {
-                let newData;
-                if (result && result.data) {
-                  let found = result.data.find(function(element) {
-                    if (element.url === url) {
-                      return true;
-                    }
-                  });
-                  if (typeof found === 'undefined') {
-                    result.data.push({
-                      url: url,
-                      tabTitle: tabTitle,
-                      favIconUrl: favIconUrl,
-                      content: content
-                    });
-                    newData = result.data;
-                  }
-                } else {
-                  newData = [{
-                    url: url,
-                    tabTitle: tabTitle,
-                    favIconUrl: favIconUrl,
-                    content: content
-                  }];
-                }
-                chrome.storage.local.set({ 'data': newData });
-              });
-            });
-          }
-
-        });
-      }
-    );
-  });
-}
-
-// eslint-disable-next-line no-unused-vars
-chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-  if (changeInfo.status === 'complete') {
-    updateActiveUrls();
-
-    let windowId = tab.windowId;
-    if (!activeUrls.find(function (element) {
-      return element.windowId === windowId && element.tabId == tabId;
-    })) {
-      saveActiveTabContents(tabId);
-    }
-  }
-});
 
 function processFormForStorage(e) {
   if (e.preventDefault) e.preventDefault();
