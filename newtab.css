@@ -3,9 +3,19 @@
   padding: 10px;
 }
 
+#searchText {
+  padding: 0 5px;
+  font-size: 16px;
+  border: 1px solid black;
+  box-shadow: none;
+  height: 44px;
+  margin: 0 auto;
+  width: 482px;
+}
+
 button {
   width: 100px;
-  height: 20px;
+  height: 44px;
 }
 
 #clearStorage {
