@@ -4,10 +4,98 @@ let results = document.getElementById('results');
 let searchBox = document.getElementById('searchText');
 var form = document.getElementById('searchForm');
 
-if (form.attachEvent) {
-  form.attachEvent("submit", processForm);
-} else {
-  form.addEventListener("submit", processForm);
+//form.addEventListener("submit", processForm);
+form.addEventListener("submit", processFormForStorage);
+
+
+
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+  if (changeInfo.status === 'complete') {
+    chrome.tabs.get(tabId, function (tab) {
+      chrome.tabs.executeScript(
+        tab.id,
+        { file: 'content_script.js' },
+        function () {
+          chrome.tabs.sendMessage(tab.id, {
+            msg: "getContents",
+            tabId: tab.id
+          }, function (response) {
+
+            if (response) {
+              let tabId = response.tabId;
+              chrome.tabs.get(tabId, function (tab) {
+                let content = response.tabContents;
+                let url = tab.url;
+                let tabTitle = tab.title;
+                let favIconUrl = tab.favIconUrl;
+  
+                chrome.storage.local.get(['data'], function (result) {
+                  let newData;
+                  if (result && result.data) {
+                    result.data.push({
+                      url: url,
+                      tabTitle: tabTitle,
+                      favIconUrl: favIconUrl,
+                      content: content
+                    });
+                    newData = result.data;
+                  } else {
+                    newData = [{
+                      url: url,
+                      tabTitle: tabTitle,
+                      favIconUrl: favIconUrl,
+                      content: content
+                    }];
+                  }
+                  chrome.storage.local.set({ 'data': newData });
+                });
+              });
+            }
+            
+          });
+        }
+      );
+    })
+  }
+});
+
+function processFormForStorage(e) {
+  if (e.preventDefault) e.preventDefault();
+
+  let searchText = searchBox.value;
+  
+  results.innerHTML = "";
+
+  chrome.storage.local.get(['data'], function (result) {
+    for (let j = 0; j < result.data.length; j++) {
+      let url = result.data[j].url;
+      let tabTitle = result.data[j].tabTitle;
+      let favIconUrl = result.data[j].favIconUrl;
+      let content = result.data[j].content;
+      //let tabButton = document.getElementById('tab-' + windowId + '-' + tabIndex);
+
+      let pos = content.toLowerCase().search(searchText.toLowerCase());
+      if (pos > -1) {
+        let contextAmount = 100;
+        let beforeContext = pos - contextAmount;
+        let afterContext = pos + contextAmount;
+
+        if (beforeContext < 0) {
+          beforeContext = 0;
+        }
+        if (afterContext > content.length - 1) {
+          afterContext = content.length - 1;
+        }
+
+        let faviconStr = favIconUrl ? favIconUrl : '';
+
+
+        results.innerHTML += "<div class='result'><div class='resultTexts'><a class='closeTab' target='_blank' href='" + url + "'><img class='favicon' src='" + faviconStr + "'><img>" + tabTitle + "</a><p class='context'>" + content.substr(beforeContext, searchText.length + contextAmount * 2) + "</p></div></div>";
+      }
+    }
+  });
+
+  return false;
 }
 
 function processForm(e) {
@@ -20,60 +108,60 @@ function processForm(e) {
   chrome.tabs.query({}, function (tabs) {
     for (let i = 0; i < tabs.length; i++) {
 
-      if (tabs[i].url.substr(0,6) === 'chrome') {
+      if (tabs[i].url.substr(0, 6) === 'chrome') {
         continue;
       }
 
       chrome.tabs.executeScript(
         tabs[i].id,
         { file: 'content_script.js' },
-        function() {
-          chrome.tabs.sendMessage(tabs[i].id, { 
-            msg: "getContents", 
+        function () {
+          chrome.tabs.sendMessage(tabs[i].id, {
+            msg: "getContents",
             tabId: tabs[i].id
           }, function (response) {
 
             let tabId = response.tabId;
-            chrome.tabs.get(tabId, function(tab) {
+            chrome.tabs.get(tabId, function (tab) {
               let content = response.tabContents;
               let windowId = tab.windowId;
-              
+
               let tabIndex = tab.index;
               let tabTitle = tab.title;
               let favIconUrl = tab.favIconUrl;
-  
+
               let pos = content.toLowerCase().search(searchText.toLowerCase());
               if (pos > -1) {
                 let contextAmount = 100;
                 let beforeContext = pos - contextAmount;
                 let afterContext = pos + contextAmount;
-    
+
                 if (beforeContext < 0) {
                   beforeContext = 0;
                 }
                 if (afterContext > content.length - 1) {
                   afterContext = content.length - 1;
                 }
-  
+
                 let faviconStr = favIconUrl ? favIconUrl : '';
-    
-                results.innerHTML += "<div class='result'><div class='resultTexts'><p class='tabname' id='tab-" + windowId + "-" + tabIndex + "'><img class='favicon' src='" + faviconStr + "'><img>"+ tabTitle +  "</p><p class='context'>" + response.tabContents.substr(beforeContext, searchText.length + contextAmount * 2) + "</p></div></div>";
-  
-                tabContents.push({windowId: windowId, tabIndex: tabIndex});
-  
-                for (let j = 0; j < tabContents.length; j++) {  
+
+                results.innerHTML += "<div class='result'><div class='resultTexts'><p class='tabname' id='tab-" + windowId + "-" + tabIndex + "'><img class='favicon' src='" + faviconStr + "'><img>" + tabTitle + "</p><p class='context'>" + response.tabContents.substr(beforeContext, searchText.length + contextAmount * 2) + "</p></div></div>";
+
+                tabContents.push({ windowId: windowId, tabIndex: tabIndex });
+
+                for (let j = 0; j < tabContents.length; j++) {
                   let windowId = tabContents[j].windowId;
                   let tabIndex = tabContents[j].tabIndex;
                   let tabButton = document.getElementById('tab-' + windowId + '-' + tabIndex);
-  
+
                   if (tabButton) {
-                    tabButton.addEventListener('click', function(el) { 
+                    tabButton.addEventListener('click', function (el) {
                       let regex = /tab-(\d+)-(\d+)/;
-                      let matches = Array.from( el.target.id.matchAll(regex) );
+                      let matches = Array.from(el.target.id.matchAll(regex));
                       let windowId = parseInt(matches[0][1], 10);
                       let tabIndex = parseInt(matches[0][2], 10);
-                      
-                      chrome.windows.update(windowId, {focused: true});
+
+                      chrome.windows.update(windowId, { focused: true });
                       chrome.tabs.highlight({
                         windowId: windowId,
                         tabs: [tabIndex]
@@ -83,7 +171,7 @@ function processForm(e) {
                 }
               }
             });
-          }); 
+          });
         });
     }
   });
@@ -91,4 +179,3 @@ function processForm(e) {
   // You must return false to prevent the default form behavior
   return false;
 }
-
