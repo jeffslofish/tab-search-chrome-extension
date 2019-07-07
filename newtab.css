@@ -1,4 +1,27 @@
+#searchForm {
+  padding: 10px;  
+}
+
 #searchButton {
   width: 100px;
   height: 20px;
+}
+
+.result {
+  padding-bottom: 10px; 
+}
+
+.tabname {
+  margin: 0 0 2px 0;
+  color: blue;
+  cursor: pointer;
+  font-size: 130%;
+}
+
+.tabname:hover {
+  text-decoration: underline;
+}
+
+.context {
+  margin: 0 0 5px 0;
 }

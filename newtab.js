@@ -55,7 +55,7 @@ function processForm(e) {
                 afterContext = content.length - 1;
               }
   
-              results.innerHTML += "<p id='tab-" + windowId + "-" + tabIndex + "'>"+ tabTitle +  " ====> " + response.tabContents.substr(beforeContext, contextAmount) + "<b>"+ searchText +"</b>"+ response.tabContents.substr(pos + searchText.length, contextAmount) + "</p>";
+              results.innerHTML += "<div class='result'><p class='tabname' id='tab-" + windowId + "-" + tabIndex + "'>"+ tabTitle +  "</p><p class='context'>" + response.tabContents.substr(beforeContext, contextAmount) + "<b>"+ searchText +"</b>"+ response.tabContents.substr(pos + searchText.length, contextAmount) + "</p></div>";
 
               tabContents.push({windowId: windowId, tabIndex: tabIndex});
 
