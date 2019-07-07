@@ -6,7 +6,9 @@ const searchBox = document.getElementById('searchText');
 const form = document.getElementById('searchForm');
 const clearStorageButton = document.getElementById('clearStorage');
 
-clearStorageButton.addEventListener("click", function() {
+let activeUrls = []; // { windowId: id, tabId: id, url: url }
+
+clearStorageButton.addEventListener("click", function () {
   chrome.storage.local.clear();
 });
 
@@ -14,53 +16,118 @@ form.addEventListener("submit", processForm);
 form.addEventListener("submit", processFormForStorage);
 
 // eslint-disable-next-line no-unused-vars
+chrome.management.onEnabled.addListener(function (info) {
+  updateActiveUrls();
+  chrome.tabs.query({}, function (tabs) {
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i].url.substr(0, 6) === 'chrome') {
+        continue;
+      }
+
+      let tab = tabs[i];
+      saveActiveTabContents(tab.id);
+    }
+  });
+});
+
+chrome.tabs.onRemoved.addListener(function (tabId, removeInfo) {
+  let windowId = removeInfo.windowId;
+  removeActiveUrl(windowId, tabId);
+});
+
+function updateActiveUrls() {
+  activeUrls = [];
+
+  chrome.tabs.query({}, function (tabs) {
+    for (let i = 0; i < tabs.length; i++) {
+      chrome.tabs.get(tabs[i].id, function (tab) {
+        activeUrls.push({
+          windowId: tab.windowId,
+          tabId: tab.id,
+          url: tab.url
+        });
+      });
+    }
+  });
+}
+
+function removeActiveUrl(windowId, tabId) {
+  let index = activeUrls.findIndex(function (element) {
+    if (element.windowId === windowId && element.tabId === tabId) {
+      return true;
+    }
+    return false;
+  });
+
+  if (index > -1) {
+    activeUrls.splice(index, 1);
+  }
+}
+
+function saveActiveTabContents(tabId) {
+  //Todo: only clear what is necessary, not everything every time
+  //chrome.storage.local.clear();
+
+  chrome.tabs.get(tabId, function (tab) {
+    //updateActiveUrls();
+
+    chrome.tabs.executeScript(
+      tab.id,
+      { file: 'content_script.js' },
+      function () {
+        chrome.tabs.sendMessage(tab.id, {
+          msg: "getContents",
+          tabId: tab.id
+        }, function (response) {
+
+          if (response) {
+            let tabId = response.tabId;
+            chrome.tabs.get(tabId, function (tab) {
+              let content = response.tabContents;
+              let url = tab.url;
+              let tabTitle = tab.title;
+              let favIconUrl = tab.favIconUrl;
+
+              chrome.storage.local.get(['data'], function (result) {
+                let newData;
+                if (result && result.data) {
+                  result.data.push({
+                    url: url,
+                    tabTitle: tabTitle,
+                    favIconUrl: favIconUrl,
+                    content: content
+                  });
+                  newData = result.data;
+                } else {
+                  newData = [{
+                    url: url,
+                    tabTitle: tabTitle,
+                    favIconUrl: favIconUrl,
+                    content: content
+                  }];
+                }
+                chrome.storage.local.set({ 'data': newData });
+              });
+            });
+          }
+
+        });
+      }
+    );
+  });
+}
+
+// eslint-disable-next-line no-unused-vars
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
   if (changeInfo.status === 'complete') {
-    chrome.tabs.get(tabId, function (tab) {
-      chrome.tabs.executeScript(
-        tab.id,
-        { file: 'content_script.js' },
-        function () {
-          chrome.tabs.sendMessage(tab.id, {
-            msg: "getContents",
-            tabId: tab.id
-          }, function (response) {
+    updateActiveUrls();
 
-            if (response) {
-              let tabId = response.tabId;
-              chrome.tabs.get(tabId, function (tab) {
-                let content = response.tabContents;
-                let url = tab.url;
-                let tabTitle = tab.title;
-                let favIconUrl = tab.favIconUrl;
-  
-                chrome.storage.local.get(['data'], function (result) {
-                  let newData;
-                  if (result && result.data) {
-                    result.data.push({
-                      url: url,
-                      tabTitle: tabTitle,
-                      favIconUrl: favIconUrl,
-                      content: content
-                    });
-                    newData = result.data;
-                  } else {
-                    newData = [{
-                      url: url,
-                      tabTitle: tabTitle,
-                      favIconUrl: favIconUrl,
-                      content: content
-                    }];
-                  }
-                  chrome.storage.local.set({ 'data': newData });
-                });
-              });
-            }
-            
-          });
-        }
-      );
-    })
+    let windowId = tab.windowId;
+    if (!activeUrls.find(function(element) {
+      return element.windowId === windowId && element.tabId == tabId;
+    })) {
+      saveActiveTabContents(tabId);
+    }
   }
 });
 
@@ -68,33 +135,41 @@ function processFormForStorage(e) {
   if (e.preventDefault) e.preventDefault();
 
   let searchText = searchBox.value;
-  
-  results.innerHTML = "";
+
+  storageResults.innerHTML = "";
 
   chrome.storage.local.get(['data'], function (result) {
+    if (!result.data) {
+      return;
+    }
+
     for (let j = 0; j < result.data.length; j++) {
       let url = result.data[j].url;
-      let tabTitle = result.data[j].tabTitle;
-      let favIconUrl = result.data[j].favIconUrl;
-      let content = result.data[j].content;
 
-      let pos = content.toLowerCase().search(searchText.toLowerCase());
-      if (pos > -1) {
-        let contextAmount = 100;
-        let beforeContext = pos - contextAmount;
-        let afterContext = pos + contextAmount;
+      if (!activeUrls.find(function (element) {
+        return element.url === url;
+      })) {
+        let tabTitle = result.data[j].tabTitle;
+        let favIconUrl = result.data[j].favIconUrl;
+        let content = result.data[j].content;
 
-        if (beforeContext < 0) {
-          beforeContext = 0;
+        let pos = content.toLowerCase().search(searchText.toLowerCase());
+        if (pos > -1) {
+          let contextAmount = 100;
+          let beforeContext = pos - contextAmount;
+          let afterContext = pos + contextAmount;
+
+          if (beforeContext < 0) {
+            beforeContext = 0;
+          }
+          if (afterContext > content.length - 1) {
+            afterContext = content.length - 1;
+          }
+
+          let faviconStr = favIconUrl ? favIconUrl : '';
+
+          storageResults.innerHTML += "<div class='result'><div class='resultTexts'><a class='closeTab' target='_blank' href='" + url + "'><img class='favicon' src='" + faviconStr + "'><img>" + tabTitle + "</a><p class='context'>" + content.substr(beforeContext, searchText.length + contextAmount * 2) + "</p></div></div>";
         }
-        if (afterContext > content.length - 1) {
-          afterContext = content.length - 1;
-        }
-
-        let faviconStr = favIconUrl ? favIconUrl : '';
-
-
-        storageResults.innerHTML += "<div class='result'><div class='resultTexts'><a class='closeTab' target='_blank' href='" + url + "'><img class='favicon' src='" + faviconStr + "'><img>" + tabTitle + "</a><p class='context'>" + content.substr(beforeContext, searchText.length + contextAmount * 2) + "</p></div></div>";
       }
     }
   });
