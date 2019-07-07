@@ -71,6 +71,7 @@ function processForm(e) {
                     let windowId = parseInt(matches[0][1], 10);
                     let tabIndex = parseInt(matches[0][2], 10);
                     
+                    chrome.windows.update(windowId, {focused: true});
                     chrome.tabs.highlight({
                       windowId: windowId,
                       tabs: [tabIndex]
