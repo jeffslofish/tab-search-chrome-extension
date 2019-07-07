@@ -90,13 +90,20 @@ function saveActiveTabContents(tabId) {
               chrome.storage.local.get(['data'], function (result) {
                 let newData;
                 if (result && result.data) {
-                  result.data.push({
-                    url: url,
-                    tabTitle: tabTitle,
-                    favIconUrl: favIconUrl,
-                    content: content
+                  let found = result.data.find(function(element) {
+                    if (element.url === url) {
+                      return true;
+                    }
                   });
-                  newData = result.data;
+                  if (typeof found === 'undefined') {
+                    result.data.push({
+                      url: url,
+                      tabTitle: tabTitle,
+                      favIconUrl: favIconUrl,
+                      content: content
+                    });
+                    newData = result.data;
+                  }
                 } else {
                   newData = [{
                     url: url,
