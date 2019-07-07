@@ -5,6 +5,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       windowId: request.windowId,
       tabId: request.tabId, 
       tabIndex: request.tabIndex,
-      tabTitle: request.tabTitle 
+      tabTitle: request.tabTitle,
+      favIconUrl: request.favIconUrl
     }); 
 });

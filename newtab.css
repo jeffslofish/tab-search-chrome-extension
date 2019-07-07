@@ -11,6 +11,17 @@
   padding-bottom: 10px; 
 }
 
+.favicon {
+  display: inline-block;
+  width: 25px;
+  height: 25px;
+  margin-right: 10px;
+}
+
+.resultTexts {
+  display: inline-block;
+}
+
 .tabname {
   margin: 0 0 2px 0;
   color: blue;
