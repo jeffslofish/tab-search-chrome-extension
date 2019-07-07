@@ -1,8 +1,8 @@
 # tab-search-chrome-extension
+
 Search the contents of your open tabs, display the results, and click on each result to go to that tab.
 
-#
-To test in development mode:
+## To test in development mode
 
 1. Clone or download this repository
 1. Open the extensions page in chrome through the three dots -> More Tools -> Extensions
