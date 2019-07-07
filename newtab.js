@@ -30,61 +30,60 @@ function processForm(e) {
         function() {
           chrome.tabs.sendMessage(tabs[i].id, { 
             msg: "getContents", 
-            windowId: tabs[i].windowId,
-            tabId: tabs[i].id,
-            tabIndex: tabs[i].index,
-            tabTitle: tabs[i].title,
-            favIconUrl: tabs[i].favIconUrl
+            tabId: tabs[i].id
           }, function (response) {
 
-            let content = response.tabContents;
-            let windowId = response.windowId;
             let tabId = response.tabId;
-            let tabIndex = response.tabIndex;
-            let tabTitle = response.tabTitle;
-            let favIconUrl = response.favIconUrl;
-
-            let pos = content.toLowerCase().search(searchText.toLowerCase());
-            if (pos > -1) {
-              let contextAmount = 30;
-              let beforeContext = pos - contextAmount;
-              let afterContext = pos + contextAmount;
+            chrome.tabs.get(tabId, function(tab) {
+              let content = response.tabContents;
+              let windowId = tab.windowId;
+              
+              let tabIndex = tab.index;
+              let tabTitle = tab.title;
+              let favIconUrl = tab.favIconUrl;
   
-              if (beforeContext < 0) {
-                beforeContext = 0;
-              }
-              if (afterContext > content.length - 1) {
-                afterContext = content.length - 1;
-              }
-
-              let faviconStr = favIconUrl ? favIconUrl : '';
+              let pos = content.toLowerCase().search(searchText.toLowerCase());
+              if (pos > -1) {
+                let contextAmount = 30;
+                let beforeContext = pos - contextAmount;
+                let afterContext = pos + contextAmount;
+    
+                if (beforeContext < 0) {
+                  beforeContext = 0;
+                }
+                if (afterContext > content.length - 1) {
+                  afterContext = content.length - 1;
+                }
   
-              results.innerHTML += "<div class='result'><img class='favicon' src='" + faviconStr + "'><img><div class='resultTexts'><p class='tabname' id='tab-" + windowId + "-" + tabIndex + "'>"+ tabTitle +  "</p><p class='context'>" + response.tabContents.substr(beforeContext, contextAmount) + "<b>"+ searchText +"</b>"+ response.tabContents.substr(pos + searchText.length, contextAmount) + "</p></div></div>";
-
-              tabContents.push({windowId: windowId, tabIndex: tabIndex});
-
-              for (let j = 0; j < tabContents.length; j++) {  
-                let windowId = tabContents[j].windowId;
-                let tabIndex = tabContents[j].tabIndex;
-                let tabButton = document.getElementById('tab-' + windowId + '-' + tabIndex);
-
-                if (tabButton) {
-                  tabButton.addEventListener('click', function(el) { 
-                    regex = /tab-(\d+)-(\d+)/;
-                    let matches = Array.from( el.target.id.matchAll(regex) );
-                    let windowId = parseInt(matches[0][1], 10);
-                    let tabIndex = parseInt(matches[0][2], 10);
-                    
-                    chrome.windows.update(windowId, {focused: true});
-                    chrome.tabs.highlight({
-                      windowId: windowId,
-                      tabs: [tabIndex]
-                    })
-                  });
+                let faviconStr = favIconUrl ? favIconUrl : '';
+    
+                results.innerHTML += "<div class='result'><img class='favicon' src='" + faviconStr + "'><img><div class='resultTexts'><p class='tabname' id='tab-" + windowId + "-" + tabIndex + "'>"+ tabTitle +  "</p><p class='context'>" + response.tabContents.substr(beforeContext, contextAmount) + "<b>"+ searchText +"</b>"+ response.tabContents.substr(pos + searchText.length, contextAmount) + "</p></div></div>";
+  
+                tabContents.push({windowId: windowId, tabIndex: tabIndex});
+  
+                for (let j = 0; j < tabContents.length; j++) {  
+                  let windowId = tabContents[j].windowId;
+                  let tabIndex = tabContents[j].tabIndex;
+                  let tabButton = document.getElementById('tab-' + windowId + '-' + tabIndex);
+  
+                  if (tabButton) {
+                    tabButton.addEventListener('click', function(el) { 
+                      regex = /tab-(\d+)-(\d+)/;
+                      let matches = Array.from( el.target.id.matchAll(regex) );
+                      let windowId = parseInt(matches[0][1], 10);
+                      let tabIndex = parseInt(matches[0][2], 10);
+                      
+                      chrome.windows.update(windowId, {focused: true});
+                      chrome.tabs.highlight({
+                        windowId: windowId,
+                        tabs: [tabIndex]
+                      })
+                    });
+                  }
                 }
               }
-            }
-          });
+            });
+          }); 
         });
     }
   });
