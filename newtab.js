@@ -19,12 +19,14 @@ searchButton.onclick = function (element) {
         function() {
           chrome.tabs.sendMessage(tabs[i].id, { 
             msg: "getContents", 
+            windowId: tabs[i].windowId,
             tabId: tabs[i].id,
             tabIndex: tabs[i].index,
             tabTitle: tabs[i].title 
           }, function (response) {
 
             let content = response.tabContents;
+            let windowId = response.windowId;
             let tabId = response.tabId;
             let tabIndex = response.tabIndex;
             let tabTitle = response.tabTitle;
@@ -42,15 +44,26 @@ searchButton.onclick = function (element) {
                 afterContext = content.length - 1;
               }
   
-              results.innerHTML += "<p id='tab-" + tabIndex + "'>"+ tabTitle +  " ====> " + response.tabContents.substr(beforeContext, contextAmount) + "<b>"+ searchText +"</b>"+ response.tabContents.substr(pos + searchText.length, contextAmount) + "</p>";
+              results.innerHTML += "<p id='tab-" + windowId + "-" + tabIndex + "'>"+ tabTitle +  " ====> " + response.tabContents.substr(beforeContext, contextAmount) + "<b>"+ searchText +"</b>"+ response.tabContents.substr(pos + searchText.length, contextAmount) + "</p>";
 
-              for (let j = 0; j < tabs.length; j++) {  
-                let tabButton = document.getElementById('tab-' + j);
+              tabContents.push({windowId: windowId, tabIndex: tabIndex});
+
+              for (let j = 0; j < tabContents.length; j++) {  
+                let windowId = tabContents[j].windowId;
+                let tabIndex = tabContents[j].tabIndex;
+                let tabButton = document.getElementById('tab-' + windowId + '-' + tabIndex);
 
                 if (tabButton) {
                   tabButton.addEventListener('click', function(el) { 
-                    let tabIndexId = parseInt(el.target.id.substr(4), 10);
-                    chrome.tabs.highlight({tabs: [tabIndexId]})
+                    regex = /tab-(\d+)-(\d+)/;
+                    let matches = Array.from( el.target.id.matchAll(regex) );
+                    let windowId = parseInt(matches[0][1], 10);
+                    let tabIndex = parseInt(matches[0][2], 10);
+                    
+                    chrome.tabs.highlight({
+                      windowId: windowId,
+                      tabs: [tabIndex]
+                    })
                   });
                 }
               }
