@@ -44,7 +44,7 @@ function processForm(e) {
   
               let pos = content.toLowerCase().search(searchText.toLowerCase());
               if (pos > -1) {
-                let contextAmount = 30;
+                let contextAmount = 100;
                 let beforeContext = pos - contextAmount;
                 let afterContext = pos + contextAmount;
     
@@ -57,7 +57,7 @@ function processForm(e) {
   
                 let faviconStr = favIconUrl ? favIconUrl : '';
     
-                results.innerHTML += "<div class='result'><img class='favicon' src='" + faviconStr + "'><img><div class='resultTexts'><p class='tabname' id='tab-" + windowId + "-" + tabIndex + "'>"+ tabTitle +  "</p><p class='context'>" + response.tabContents.substr(beforeContext, contextAmount) + "<b>"+ searchText +"</b>"+ response.tabContents.substr(pos + searchText.length, contextAmount) + "</p></div></div>";
+                results.innerHTML += "<div class='result'><div class='resultTexts'><p class='tabname' id='tab-" + windowId + "-" + tabIndex + "'><img class='favicon' src='" + faviconStr + "'><img>"+ tabTitle +  "</p><p class='context'>" + response.tabContents.substr(beforeContext, searchText.length + contextAmount * 2) + "</p></div></div>";
   
                 tabContents.push({windowId: windowId, tabIndex: tabIndex});
   
