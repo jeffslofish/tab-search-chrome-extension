@@ -1,14 +1,19 @@
 /*global chrome:true*/
 
-let results = document.getElementById('results');
-let searchBox = document.getElementById('searchText');
-var form = document.getElementById('searchForm');
+const results = document.getElementById('results');
+const storageResults = document.getElementById('storageResults');
+const searchBox = document.getElementById('searchText');
+const form = document.getElementById('searchForm');
+const clearStorageButton = document.getElementById('clearStorage');
 
-//form.addEventListener("submit", processForm);
+clearStorageButton.addEventListener("click", function() {
+  chrome.storage.local.clear();
+});
+
+form.addEventListener("submit", processForm);
 form.addEventListener("submit", processFormForStorage);
 
-
-
+// eslint-disable-next-line no-unused-vars
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
   if (changeInfo.status === 'complete') {
     chrome.tabs.get(tabId, function (tab) {
@@ -72,7 +77,6 @@ function processFormForStorage(e) {
       let tabTitle = result.data[j].tabTitle;
       let favIconUrl = result.data[j].favIconUrl;
       let content = result.data[j].content;
-      //let tabButton = document.getElementById('tab-' + windowId + '-' + tabIndex);
 
       let pos = content.toLowerCase().search(searchText.toLowerCase());
       if (pos > -1) {
@@ -90,7 +94,7 @@ function processFormForStorage(e) {
         let faviconStr = favIconUrl ? favIconUrl : '';
 
 
-        results.innerHTML += "<div class='result'><div class='resultTexts'><a class='closeTab' target='_blank' href='" + url + "'><img class='favicon' src='" + faviconStr + "'><img>" + tabTitle + "</a><p class='context'>" + content.substr(beforeContext, searchText.length + contextAmount * 2) + "</p></div></div>";
+        storageResults.innerHTML += "<div class='result'><div class='resultTexts'><a class='closeTab' target='_blank' href='" + url + "'><img class='favicon' src='" + faviconStr + "'><img>" + tabTitle + "</a><p class='context'>" + content.substr(beforeContext, searchText.length + contextAmount * 2) + "</p></div></div>";
       }
     }
   });
@@ -176,6 +180,5 @@ function processForm(e) {
     }
   });
 
-  // You must return false to prevent the default form behavior
   return false;
 }
