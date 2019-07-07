@@ -205,7 +205,9 @@ function processForm(e) {
             msg: "getContents",
             tabId: tabs[i].id
           }, function (response) {
-
+            if (!response) {
+              return;
+            }
             let tabId = response.tabId;
             chrome.tabs.get(tabId, function (tab) {
               let content = response.tabContents;
