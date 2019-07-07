@@ -15,7 +15,8 @@
     "management",
     "bookmarks",
     "history",
-    "downloads"
+    "downloads",
+    "sessions"
   ],
   "chrome_url_overrides" : {
     "newtab": "newtab.html"

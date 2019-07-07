@@ -1,0 +1,21 @@
+{
+  "name": "tab-search-chrome-extension",
+  "version": "0.0.1",
+  "description": "Search the contents of your open tabs, display the results, and click on each result to go to that tab.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeffslofish/tab-search-chrome-extension.git"
+  },
+  "author": "Jeffrey Fisher",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jeffslofish/tab-search-chrome-extension/issues"
+  },
+  "homepage": "https://github.com/jeffslofish/tab-search-chrome-extension#readme",
+  "devDependencies": {
+    "eslint": "^6.0.1"
+  }
+}
