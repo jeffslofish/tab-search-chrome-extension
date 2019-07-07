@@ -42,7 +42,7 @@ function processForm(e) {
             let tabIndex = response.tabIndex;
             let tabTitle = response.tabTitle;
 
-            let pos = content.search(searchText);
+            let pos = content.toLowerCase().search(searchText.toLowerCase());
             if (pos > -1) {
               let contextAmount = 30;
               let beforeContext = pos - contextAmount;
