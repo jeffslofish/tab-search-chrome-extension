@@ -65,11 +65,10 @@ function removeActiveUrl(windowId, tabId) {
 }
 
 function saveActiveTabContents(tabId) {
-  //Todo: only clear what is necessary, not everything every time
-  //chrome.storage.local.clear();
-
   chrome.tabs.get(tabId, function (tab) {
-    //updateActiveUrls();
+    if (tab.url.substr(0, 6) === 'chrome') {
+      return;
+    }
 
     chrome.tabs.executeScript(
       tab.id,
@@ -123,7 +122,7 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     updateActiveUrls();
 
     let windowId = tab.windowId;
-    if (!activeUrls.find(function(element) {
+    if (!activeUrls.find(function (element) {
       return element.windowId === windowId && element.tabId == tabId;
     })) {
       saveActiveTabContents(tabId);
