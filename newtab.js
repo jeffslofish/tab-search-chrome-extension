@@ -1,8 +1,19 @@
 let searchButton = document.getElementById('searchButton');
 let results = document.getElementById('results');
+let searchBox = document.getElementById('searchText');
 
-searchButton.onclick = function (element) {
-  let searchText = document.getElementById('searchText').value;
+
+var form = document.getElementById('searchForm');
+if (form.attachEvent) {
+  form.attachEvent("submit", processForm);
+} else {
+  form.addEventListener("submit", processForm);
+}
+
+function processForm(e) {
+  if (e.preventDefault) e.preventDefault();
+
+  let searchText = searchBox.value;
   let tabContents = [];
   results.innerHTML = "";
 
@@ -72,4 +83,8 @@ searchButton.onclick = function (element) {
         });
     }
   });
-};
+
+  // You must return false to prevent the default form behavior
+  return false;
+}
+
