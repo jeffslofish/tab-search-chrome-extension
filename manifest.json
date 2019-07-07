@@ -18,7 +18,7 @@
     "downloads"
   ],
   "chrome_url_overrides" : {
-    "newtab": "popup.html"
+    "newtab": "newtab.html"
   },
   "page_action": {
     "default_popup": "popup.html",
