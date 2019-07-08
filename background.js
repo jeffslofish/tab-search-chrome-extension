@@ -51,7 +51,7 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
 function saveAllTabContents() {
   chrome.tabs.query({}, function (tabs) {
     for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i].url.substr(0, 6) !== 'http') {
+      if (tabs[i].url.substr(0, 4) !== 'http') {
         continue;
       }
 
@@ -63,7 +63,7 @@ function saveAllTabContents() {
 
 function saveTabContents(tabId) {
   chrome.tabs.get(tabId, function (tab) {
-    if (tab.url.substr(0, 6) === 'chrome') {
+    if (tab.url.substr(0, 4) != 'http') {
       return;
     }
 
