@@ -51,7 +51,13 @@ function processFormForStorage(e) {
 
           let faviconStr = favIconUrl ? favIconUrl : '';
 
-          storageResults.innerHTML += "<div class='result'><div class='resultTexts'><a class='closeTab' target='_blank' href='" + url + "'><img class='favicon' src='" + faviconStr + "'><img>" + tabTitle + "</a><p class='context'>" + content.substr(beforeContext, searchText.length + contextAmount * 2) + "</p></div></div>";
+          storageResults.innerHTML += `
+          <div class="result">
+            <div class="resultTexts">
+              <a class="closeTab" target="_blank" href="${url}"><img class="favicon" src="${faviconStr}">${tabTitle}</a>
+              <p class="context">${content.substr(beforeContext, searchText.length + contextAmount * 2)}</p>
+            </div>
+          </div>`;
         }
       }
     }
@@ -109,7 +115,13 @@ function processForm(e) {
 
                 let faviconStr = favIconUrl ? favIconUrl : '';
 
-                results.innerHTML += "<div class='result'><div class='resultTexts'><p class='tabname' id='tab-" + windowId + "-" + tabIndex + "'><img class='favicon' src='" + faviconStr + "'><img>" + tabTitle + "</p><p class='context'>" + response.tabContents.substr(beforeContext, searchText.length + contextAmount * 2) + "</p></div></div>";
+                results.innerHTML += `
+                <div class="result">
+                  <div class="resultTexts">
+                    <p class="tabname" id="tab-${windowId}-${tabIndex}"><img class="favicon" src="${faviconStr}">${tabTitle}</p>
+                    <p class="context">${response.tabContents.substr(beforeContext, searchText.length + contextAmount * 2)}</p>
+                  </div>
+                </div>`;
 
                 tabContents.push({ windowId: windowId, tabIndex: tabIndex });
 
