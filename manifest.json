@@ -3,24 +3,13 @@
   "version": "0.0.1",
   "description": "Have too many tabs? Search for text in the tab to find the one you want.",
   "permissions": [
-    "activeTab",
     "tabs",
     "http://*/*",
     "https://*/*",
-    "storage",
-    "unlimitedStorage",
-    "idle",
-    "system.memory",
-    "tabCapture",
-    "management",
-    "bookmarks",
-    "history",
-    "downloads",
-    "sessions"
+    "storage"
   ],
   "background": {
-    "scripts": ["background.js"],
-    "persistent": false
+    "scripts": ["background.js"]
   },
   "chrome_url_overrides" : {
     "newtab": "newtab.html"
