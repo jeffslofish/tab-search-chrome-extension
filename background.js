@@ -7,7 +7,7 @@ chrome.runtime.onInstalled.addListener(function () {
 chrome.runtime.onMessage.addListener(function (request) { 
   console.log("runtime.onMessage");
 
-  if (request.msg == "saveTabData") {
+  if (request.msg === "saveTabData") {
     saveAllTabContents();
   }
 });
@@ -61,7 +61,7 @@ function saveAllTabContents() {
 
 function saveTabContents(tabId) {
   chrome.tabs.get(tabId, function (tab) {
-    if (tab.url.substr(0, 4) != 'http') {
+    if (tab.url.substr(0, 4) !== 'http') {
       return;
     }
 
@@ -84,6 +84,16 @@ function saveTabContents(tabId) {
 
               chrome.storage.local.get(['data'], function (result) {
                 let newData;
+                let storageData = {
+                  active: true,
+                  windowId: tab.windowId,
+                  tabId: tab.id,
+                  url: url,
+                  tabTitle: tabTitle,
+                  favIconUrl: favIconUrl,
+                  content: content
+                };
+
                 if (result && result.data) {
                   let found = result.data.find(function (element) {
                     if (element.url === url) {
@@ -91,27 +101,11 @@ function saveTabContents(tabId) {
                     }
                   });
                   if (typeof found === 'undefined') {
-                    result.data.push({
-                      active: true,
-                      windowId: tab.windowId,
-                      tabId: tab.id,
-                      url: url,
-                      tabTitle: tabTitle,
-                      favIconUrl: favIconUrl,
-                      content: content
-                    });
+                    result.data.push(storageData);
                     newData = result.data;
                   }
                 } else {
-                  newData = [{
-                    active: true,
-                    windowId: tab.windowId,
-                    tabId: tab.id,
-                    url: url,
-                    tabTitle: tabTitle,
-                    favIconUrl: favIconUrl,
-                    content: content
-                  }];
+                  newData = [storageData];
                 }
                 chrome.storage.local.set({ 'data': newData });
               });
