@@ -78,7 +78,7 @@ function processForm(e) {
   chrome.tabs.query({}, function (tabs) {
     for (let i = 0; i < tabs.length; i++) {
 
-      if (tabs[i].url.substr(0, 6) === 'chrome') {
+      if (tabs[i].url.substr(0, 4) !== 'http') {
         continue;
       }
 
