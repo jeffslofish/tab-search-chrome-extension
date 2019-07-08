@@ -6,7 +6,8 @@
     "tabs",
     "http://*/*",
     "https://*/*",
-    "storage"
+    "storage",
+    "management"
   ],
   "background": {
     "scripts": ["background.js"]
