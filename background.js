@@ -1,24 +1,27 @@
 /*global chrome:true*/
 
 chrome.runtime.onInstalled.addListener(function () {
-  console.log("installed");
+  console.log("runtime.onInstalled");
+});
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) { 
+  console.log("runtime.onMessage");
+
+  if (request.msg == "saveTabData") {
+    saveAllTabContents();
+  }
 });
 
 // eslint-disable-next-line no-unused-vars
 chrome.management.onEnabled.addListener(function (info) {
-  chrome.tabs.query({}, function (tabs) {
-    for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i].url.substr(0, 6) !== 'http') {
-        continue;
-      }
+  console.log("management.onEnabled");
 
-      let tab = tabs[i];
-      saveActiveTabContents(tab.id);
-    }
-  });
+  saveAllTabContents();
 });
 
 chrome.tabs.onRemoved.addListener(function (tabId, removeInfo) {
+  console.log("tabs.onRemoved");
+
   let windowId = removeInfo.windowId;
 
   chrome.storage.local.get(['data'], function (result) {
@@ -38,12 +41,27 @@ chrome.tabs.onRemoved.addListener(function (tabId, removeInfo) {
 
 // eslint-disable-next-line no-unused-vars
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+  console.log("tabs.onUpdated");
+
   if (changeInfo.status === 'complete') {
-    saveActiveTabContents(tabId);
+    saveTabContents(tabId);
   }
 });
 
-function saveActiveTabContents(tabId) {
+function saveAllTabContents() {
+  chrome.tabs.query({}, function (tabs) {
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i].url.substr(0, 6) !== 'http') {
+        continue;
+      }
+
+      let tab = tabs[i];
+      saveTabContents(tab.id);
+    }
+  });
+}
+
+function saveTabContents(tabId) {
   chrome.tabs.get(tabId, function (tab) {
     if (tab.url.substr(0, 6) === 'chrome') {
       return;
@@ -101,7 +119,6 @@ function saveActiveTabContents(tabId) {
               });
             });
           }
-
         });
       }
     );

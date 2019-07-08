@@ -6,6 +6,8 @@ const searchBox = document.getElementById('searchText');
 const form = document.getElementById('searchForm');
 const clearStorageButton = document.getElementById('clearStorage');
 
+chrome.runtime.sendMessage({ msg: "saveTabData" });
+
 clearStorageButton.addEventListener("click", function () {
   chrome.storage.local.clear();
 });
