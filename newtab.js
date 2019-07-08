@@ -1,7 +1,5 @@
 /*global chrome:true*/
 
-let activeUrls = [];
-
 const results = document.getElementById('results');
 const storageResults = document.getElementById('storageResults');
 const searchBox = document.getElementById('searchText');
@@ -14,13 +12,6 @@ clearStorageButton.addEventListener("click", function () {
 
 form.addEventListener("submit", processForm);
 form.addEventListener("submit", processFormForStorage);
-
-// eslint-disable-next-line no-unused-vars
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  // sent from another content script, intended for saving source
-  activeUrls = request.activeUrls
-});
-
 
 function processFormForStorage(e) {
   if (e.preventDefault) e.preventDefault();
@@ -36,10 +27,9 @@ function processFormForStorage(e) {
 
     for (let j = 0; j < result.data.length; j++) {
       let url = result.data[j].url;
+      let isActive = result.data[j].active;
 
-      if (!activeUrls.find(function (element) {
-        return element.url === url;
-      })) {
+      if (!isActive) {
         let tabTitle = result.data[j].tabTitle;
         let favIconUrl = result.data[j].favIconUrl;
         let content = result.data[j].content;

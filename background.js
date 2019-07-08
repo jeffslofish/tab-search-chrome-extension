@@ -1,14 +1,11 @@
 /*global chrome:true*/
 
-let activeUrls = []; // { windowId: id, tabId: id, url: url }
-
-chrome.runtime.onInstalled.addListener(function() {
+chrome.runtime.onInstalled.addListener(function () {
   console.log("installed");
 });
 
 // eslint-disable-next-line no-unused-vars
 chrome.management.onEnabled.addListener(function (info) {
-  updateActiveUrls();
   chrome.tabs.query({}, function (tabs) {
     for (let i = 0; i < tabs.length; i++) {
       if (tabs[i].url.substr(0, 6) !== 'http') {
@@ -23,57 +20,26 @@ chrome.management.onEnabled.addListener(function (info) {
 
 chrome.tabs.onRemoved.addListener(function (tabId, removeInfo) {
   let windowId = removeInfo.windowId;
-  removeActiveUrl(windowId, tabId);
-});
 
-function updateActiveUrls() {
-  console.log("updateActiveUrls");
-  activeUrls = [];
-
-  chrome.tabs.query({}, function (tabs) {
-    for (let i = 0; i < tabs.length; i++) {
-      chrome.tabs.get(tabs[i].id, function (tab) {
-        activeUrls.push({
-          windowId: tab.windowId,
-          tabId: tab.id,
-          url: tab.url
-        });
-        activeUrlsChanged();
+  chrome.storage.local.get(['data'], function (result) {
+    if (result && result.data) {
+      let index = result.data.findIndex(function (element) {
+        if (element.windowId === windowId && element.tabId === tabId) {
+          return true;
+        }
       });
+      if (index > -1) {
+        result.data[index].active = false;
+        chrome.storage.local.set({ 'data': result.data });
+      }
     }
   });
-}
-
-// Call this whenever activeUrls is changed
-function activeUrlsChanged() {
-  chrome.runtime.sendMessage({activeUrls: activeUrls});
-}
-
-function removeActiveUrl(windowId, tabId) {
-  let index = activeUrls.findIndex(function (element) {
-    if (element.windowId === windowId && element.tabId === tabId) {
-      return true;
-    }
-    return false;
-  });
-
-  if (index > -1) {
-    activeUrls.splice(index, 1);
-    activeUrlsChanged();
-  }
-}
+});
 
 // eslint-disable-next-line no-unused-vars
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
   if (changeInfo.status === 'complete') {
-    updateActiveUrls();
-
-    let windowId = tab.windowId;
-    if (!activeUrls.find(function (element) {
-      return element.windowId === windowId && element.tabId == tabId;
-    })) {
-      saveActiveTabContents(tabId);
-    }
+    saveActiveTabContents(tabId);
   }
 });
 
@@ -103,13 +69,16 @@ function saveActiveTabContents(tabId) {
               chrome.storage.local.get(['data'], function (result) {
                 let newData;
                 if (result && result.data) {
-                  let found = result.data.find(function(element) {
+                  let found = result.data.find(function (element) {
                     if (element.url === url) {
                       return true;
                     }
                   });
                   if (typeof found === 'undefined') {
                     result.data.push({
+                      active: true,
+                      windowId: tab.windowId,
+                      tabId: tab.id,
                       url: url,
                       tabTitle: tabTitle,
                       favIconUrl: favIconUrl,
@@ -119,6 +88,9 @@ function saveActiveTabContents(tabId) {
                   }
                 } else {
                   newData = [{
+                    active: true,
+                    windowId: tab.windowId,
+                    tabId: tab.id,
                     url: url,
                     tabTitle: tabTitle,
                     favIconUrl: favIconUrl,
