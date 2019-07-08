@@ -4,7 +4,7 @@ chrome.runtime.onInstalled.addListener(function () {
   console.log("runtime.onInstalled");
 });
 
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) { 
+chrome.runtime.onMessage.addListener(function (request) { 
   console.log("runtime.onMessage");
 
   if (request.msg == "saveTabData") {
@@ -12,8 +12,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 });
 
-// eslint-disable-next-line no-unused-vars
-chrome.management.onEnabled.addListener(function (info) {
+chrome.management.onEnabled.addListener(function () {
   console.log("management.onEnabled");
 
   saveAllTabContents();
@@ -39,8 +38,7 @@ chrome.tabs.onRemoved.addListener(function (tabId, removeInfo) {
   });
 });
 
-// eslint-disable-next-line no-unused-vars
-chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo) {
   console.log("tabs.onUpdated");
 
   if (changeInfo.status === 'complete') {
