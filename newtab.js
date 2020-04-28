@@ -132,7 +132,7 @@ function processForm(e) {
 
                   if (tabButton) {
                     tabButton.addEventListener('click', function (el) {
-                      let regex = /tab-(\d+)-(\d+)/;
+                      let regex = /tab-(\d+)-(\d+)/g;
                       let matches = Array.from(el.target.id.matchAll(regex));
                       let windowId = parseInt(matches[0][1], 10);
                       let tabIndex = parseInt(matches[0][2], 10);
